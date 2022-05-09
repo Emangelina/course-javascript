@@ -18,19 +18,17 @@
  */
 
 function isAllTrue(array, fn) {
-  //это мое решение до просмотра воркшопа
-  if (!Array.isArray(array) || array.length === 0) {
+  if (!Array.isArray(array) || !array.length) {
     throw new Error('empty array');
   } else if (typeof fn !== 'function') {
     throw new Error('fn is not a function');
   } else {
-    const resultArray = [];
     for (const item of array) {
-      if (fn(item)) {
-        resultArray.push(item);
+      if (!fn(item)) {
+        return false;
       }
     }
-    return JSON.stringify(array) === JSON.stringify(resultArray);
+    return true;
   }
 }
 
@@ -51,19 +49,17 @@ function isAllTrue(array, fn) {
    isSomeTrue([1, 2, 3, 4, 5], n => n > 20) // вернет false
  */
 function isSomeTrue(array, fn) {
-  //это мое решение до просмотра воркшопа
-  if (!Array.isArray(array) || array.length === 0) {
+  if (!Array.isArray(array) || !array.length) {
     throw new Error('empty array');
   } else if (typeof fn !== 'function') {
     throw new Error('fn is not a function');
   } else {
-    const resultArray = [];
     for (const item of array) {
       if (fn(item)) {
-        resultArray.push(item);
+        return true;
       }
     }
-    return resultArray.length > 0;
+    return false;
   }
 }
 
@@ -79,7 +75,6 @@ function isSomeTrue(array, fn) {
    - fn не является функцией (с текстом "fn is not a function")
  */
 function returnBadArguments(fn, ...args) {
-  //сначала не так поняла условие задачи и обрабатывала исключение внутри передеваемой функции, после просмотра воркшопа переделала структуру
   if (typeof fn != 'function') {
     throw new Error('fn is not a function');
   } else {
@@ -118,39 +113,23 @@ function calculator(number = 0) {
   } else {
     const object = {
       sum: function (...args) {
-        let sum = number;
-        for (const item of args) {
-          sum += item;
-        }
-        return sum;
+        return args.reduce((acc, current) => acc + current, number);
       },
 
       dif: function (...args) {
-        let dif = number;
-        for (const item of args) {
-          dif -= item;
-        }
-        return dif;
+        return args.reduce((acc, current) => acc - current, number);
       },
 
       div: function (...args) {
-        let div = number;
         if (args.includes(0)) {
           throw new Error('division by 0');
         } else {
-          for (const item of args) {
-            div /= item;
-          }
-          return div;
+          return args.reduce((acc, current) => acc / current, number);
         }
       },
 
       mul: function (...args) {
-        let mul = number;
-        for (const item of args) {
-          mul *= item;
-        }
-        return mul;
+        return args.reduce((acc, current) => acc * current, number);
       },
     };
     return object;
