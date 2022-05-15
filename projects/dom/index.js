@@ -10,7 +10,11 @@
  Пример:
    createDivWithText('loftschool') // создаст элемент div, поместит в него 'loftschool' и вернет созданный элемент
  */
-function createDivWithText(text) {}
+function createDivWithText(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div;
+}
 
 /*
  Задание 2:
@@ -20,7 +24,10 @@ function createDivWithText(text) {}
  Пример:
    prepend(document.querySelector('#one'), document.querySelector('#two')) // добавит элемент переданный первым аргументом в начало элемента переданного вторым аргументом
  */
-function prepend(what, where) {}
+function prepend(what, where) {
+  const firstElem = where.firstElementChild;
+  where.insertBefore(what, firstElem);
+}
 
 /*
  Задание 3:
@@ -41,7 +48,27 @@ function prepend(what, where) {}
 
    findAllPSiblings(document.body) // функция должна вернуть массив с элементами div и span т.к. следующим соседом этих элементов является элемент с тегом P
  */
-function findAllPSiblings(where) {}
+// function findAllPSiblings(where) { //мое первоначальное решение
+//   const resultArray = [];
+
+//   let next = where.firstElementChild;
+//   while (next = next.nextElementSibling) {
+//     if (next.nodeName === 'P') {
+//       resultArray.push(next.previousElementSibling);
+//     };
+//   }
+//   return resultArray;
+// }
+
+function findAllPSiblings(where) {
+  const resultArray = [];
+  for (const item of where.children) {
+    if (item.nextElementSibling && item.nextElementSibling.tagName === 'P') {
+      resultArray.push(item);
+    }
+  }
+  return resultArray;
+}
 
 /*
  Задание 4:
@@ -63,7 +90,7 @@ function findAllPSiblings(where) {}
 function findError(where) {
   const result = [];
 
-  for (const child of where.childNodes) {
+  for (const child of where.children) {
     result.push(child.textContent);
   }
 
@@ -82,7 +109,14 @@ function findError(where) {
    После выполнения функции, дерево <div></div>привет<p></p>loftchool!!!
    должно быть преобразовано в <div></div><p></p>
  */
-function deleteTextNodes(where) {}
+function deleteTextNodes(where) {
+  //знаю, что над учитывать сдвиг элементов и реализовала это в рекурсивной функции, но разве здесь это важно? ведь текстовые узлы между элементами они как бы не делятся, если рядом стоят. Я проверяла, все текстовые удаляются и так.
+  for (const node of where.childNodes) {
+    if (node.nodeType === 3) {
+      where.removeChild(node);
+    }
+  }
+}
 
 /*
  Задание 6:
@@ -95,7 +129,17 @@ function deleteTextNodes(where) {}
    После выполнения функции, дерево <span> <div> <b>привет</b> </div> <p>loftchool</p> !!!</span>
    должно быть преобразовано в <span><div><b></b></div><p></p></span>
  */
-function deleteTextNodesRecursive(where) {}
+function deleteTextNodesRecursive(where) {
+  for (let i = 0; i < where.childNodes.length; ) {
+    const node = where.childNodes[i];
+    if (node.nodeType === 3) {
+      where.removeChild(node);
+    } else {
+      deleteTextNodesRecursive(node);
+      i++;
+    }
+  }
+}
 
 /*
  Задание 7 *:
@@ -117,7 +161,38 @@ function deleteTextNodesRecursive(where) {}
      texts: 3
    }
  */
-function collectDOMStat(root) {}
+function collectDOMStat(root) {
+  const result = {
+    tags: {},
+    classes: {},
+    texts: 0,
+  };
+
+  function collector(root) {
+    for (const node of root.childNodes) {
+      if (node.nodeType === 3) {
+        result.texts += 1;
+      } else {
+        if (!result.tags[node.nodeName]) {
+          result.tags[node.nodeName] = 1;
+        } else {
+          result.tags[node.nodeName] += 1;
+        }
+
+        for (const someClass of node.classList) {
+          if (!result.classes[someClass]) {
+            result.classes[someClass] = 1;
+          } else {
+            result.classes[someClass] += 1;
+          }
+        }
+        collector(node);
+      }
+    }
+  }
+  collector(root);
+  return result;
+}
 
 /*
  Задание 8 *:
@@ -151,7 +226,55 @@ function collectDOMStat(root) {}
      nodes: [div]
    }
  */
-function observeChildNodes(where, fn) {}
+// function observeChildNodes(where, fn) {  //мой первоначальный вариант решения
+
+//   function callback(mutations, observer) {
+//     const object = {};
+
+//     mutations.forEach(function(curValue) {
+//       const addedNode = curValue.addedNodes[0];
+//       const removedNode = curValue.removedNodes[0];
+
+//       if (addedNode) {
+//         object.type = 'insert';
+//         if (addedNode.nodeType===1){
+//           object.nodes = `[${addedNode['localName']}]`;
+//         }
+//       } else if (removedNode) {
+//         object.type = 'remove';
+//         if (removedNode.nodeType===1) {
+//           object.nodes = `[${removedNode['localName']}]`;
+//         }
+//       }
+//     })
+
+//     fn(object);
+//   }
+
+// const observer = new MutationObserver(callback);
+// observer.observe(where, {childList: true, subtree: true});
+// }
+
+function observeChildNodes(where, fn) {
+  const object = {};
+
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
+      if (mutation.type === 'childList') {
+        if (mutation.addedNodes.length) {
+          object.type = 'insert';
+          object.nodes = [...mutation.addedNodes];
+        } else if (mutation.removedNodes.length) {
+          object.type = 'remove';
+          object.nodes = [...mutation.removedNodes];
+        }
+      }
+    });
+    fn(object);
+  });
+
+  observer.observe(where, { childList: true, subtree: true });
+}
 
 export {
   createDivWithText,
