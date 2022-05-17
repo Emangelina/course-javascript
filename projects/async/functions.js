@@ -10,7 +10,7 @@
  */
 function delayPromise(seconds) {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(), seconds * 1000);
+    setTimeout(resolve, seconds * 1000);
   });
 }
 
@@ -27,37 +27,37 @@ function delayPromise(seconds) {
  Пример:
    loadAndSortTowns().then(towns => console.log(towns)) // должна вывести в консоль отсортированный массив городов
  */
-function loadAndSortTowns() {
-  return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open(
-      'GET',
-      'https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json'
-    );
-
-    xhr.addEventListener('load', () => {
-      if (xhr.status < 400) {
-        const array = JSON.parse(xhr.responseText);
-        const resultArray = array.sort(function (a, b) {
-          if (a.name > b.name) {
-            return 1;
-          }
-          if (a.name < b.name) {
-            return -1;
-          }
-          return 0;
-        });
-        resolve(resultArray);
-      }
-    });
-    xhr.send();
-  });
-}
-
 // function loadAndSortTowns() {
-//   return fetch("https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json")
-//     .then((response) => response.json())
-//     .then((towns) => towns.sort((a, b) => a.name.localeCompare(b.name)));
+//   return new Promise((resolve) => {
+//     const xhr = new XMLHttpRequest();
+//     xhr.open(
+//       'GET',
+//       'https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json'
+//     );
+
+//     xhr.addEventListener('load', () => {
+//       if (xhr.status < 400) {
+//         const array = JSON.parse(xhr.responseText);
+//         const resultArray = array.sort(function (a, b) {
+//           if (a.name > b.name) {
+//             return 1;
+//           }
+//           if (a.name < b.name) {
+//             return -1;
+//           }
+//           return 0;
+//         });
+//         resolve(resultArray);
+//       }
+//     });
+//     xhr.send();
+//   });
 // }
+
+function loadAndSortTowns() {
+  return fetch('https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json')
+    .then((response) => response.json())
+    .then((towns) => towns.sort((a, b) => a.name.localeCompare(b.name)));
+}
 
 export { delayPromise, loadAndSortTowns };

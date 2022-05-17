@@ -40,33 +40,7 @@ const homeworkContainer = document.querySelector('#app');
  https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json
  */
 
-function loadAndSortTowns() {
-  //пришлось ее добавить, без объявления тест ругался
-  return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open(
-      'GET',
-      'https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json'
-    );
-
-    xhr.addEventListener('load', () => {
-      if (xhr.status < 400) {
-        const array = JSON.parse(xhr.responseText);
-        const resultArray = array.sort(function (a, b) {
-          if (a.name > b.name) {
-            return 1;
-          }
-          if (a.name < b.name) {
-            return -1;
-          }
-          return 0;
-        });
-        resolve(resultArray);
-      }
-    });
-    xhr.send();
-  });
-}
+import { loadAndSortTowns } from './functions.js';
 
 function loadTowns() {
   return loadAndSortTowns();
@@ -100,6 +74,8 @@ const filterInput = homeworkContainer.querySelector('#filter-input');
 /* Блок с результатами поиска */
 const filterResult = homeworkContainer.querySelector('#filter-result');
 
+let towns = [];
+
 retryButton.addEventListener('click', () => {
   tryToLoad();
 });
@@ -109,7 +85,7 @@ filterBlock.style.display = 'none';
 
 async function tryToLoad() {
   try {
-    await loadTowns();
+    towns = await loadTowns();
     loadingBlock.style.display = 'none';
     filterBlock.style.display = 'block';
   } catch (error) {
@@ -118,33 +94,17 @@ async function tryToLoad() {
   }
 }
 
-// function tryToLoad() { //Правильно я переписала код выше с помощью .then() и catch()? тест вроде не ругается
-//   loadTowns()
-//     .then(() => {
-//        loadingBlock.style.display = "none";
-//        filterBlock.style.display = "block";})
-//     .catch(() => {
-//        loadingBlock.style.display = "none";
-//        loadingFailedBlock.style.display = "block";})
-// }
-
 filterInput.addEventListener('input', function () {
-  const value = filterInput.value;
-
-  if (filterInput.value === '') {
-    filterResult.innerHTML = '';
-  } else {
-    filterResult.innerHTML = '';
-
-    loadTowns().then((towns) => {
-      for (const town of towns) {
-        if (isMatching(town.name, value)) {
-          const div = document.createElement('div');
-          div.textContent = town.name;
-          filterResult.appendChild(div);
-        }
+  const value = this.value;
+  filterResult.innerHTML = '';
+  if (value) {
+    for (const town of towns) {
+      if (isMatching(town.name, value)) {
+        const div = document.createElement('div');
+        div.textContent = town.name;
+        filterResult.appendChild(div);
       }
-    });
+    }
   }
 });
 
