@@ -45,8 +45,102 @@ const addButton = homeworkContainer.querySelector('#add-button');
 // таблица со списком cookie
 const listTable = homeworkContainer.querySelector('#list-table tbody');
 
-filterNameInput.addEventListener('input', function () {});
+filterNameInput.addEventListener('input', function () {
+  listTable.innerHTML = '';
+  if (this.value !== '') {
+    for (const cookie in getCookies()) {
+      if (cookie !== '') {
+        if (cookie.includes(this.value) || getCookies()[cookie].includes(this.value)) {
+          listTable.innerHTML += ` <tr>
+          <td>${cookie}</td>
+          <td>${getCookies()[cookie]}</td>
+          <td><button class="deleteBtn">Удалить cookie</button></td>
+        </tr>`;
+        }
+      }
+    }
+  } else {
+    renderCookies(getCookies());
+  }
+});
 
-addButton.addEventListener('click', () => {});
+function findData(where, name) {
+  const rows = where.querySelectorAll('tr');
+  for (const row of rows) {
+    const data = row.firstElementChild;
+    if (data.textContent === name) {
+      return data.nextElementSibling;
+    }
+  }
+}
 
-listTable.addEventListener('click', (e) => {});
+addButton.addEventListener('click', () => {
+  const name = addNameInput.value;
+  const value = addValueInput.value;
+  document.cookie = `${name}=${value}`;
+
+  if (name && value) {
+    if (filterNameInput.value === '') {
+      if (findData(listTable, name)) {
+        findData(listTable, name).textContent = value;
+      } else {
+        getCookies()[name] = value;
+
+        listTable.innerHTML += ` <tr>
+          <td>${name}</td>
+          <td>${value}</td>
+          <td><button class="deleteBtn">Удалить cookie</button></td>
+        </tr>`;
+      }
+    } else {
+      getCookies()[name] = value;
+
+      if (filterNameInput.value.includes(name) || filterNameInput.value.includes(value)) {
+        listTable.innerHTML += ` <tr>
+        <td>${name}</td>
+        <td>${value}</td>
+        <td><button class="deleteBtn">Удалить cookie</button></td>
+      </tr>`;
+      }
+    }
+
+    addNameInput.value = '';
+    addValueInput.value = '';
+  }
+});
+
+listTable.addEventListener('click', (e) => {
+  if (e.target.classList.contains('deleteBtn')) {
+    const tRow = e.target.closest('tr');
+    e.target.closest('tbody').removeChild(tRow);
+
+    document.cookie = `${tRow.firstElementChild.textContent}=${''}; max-age=-1`;
+  }
+});
+
+function getCookies() {
+  if (document.cookie !== '') {
+    const cookies = document.cookie.split('; ').reduce((prev, current) => {
+      const [name, value] = current.split('=');
+      prev[name] = value;
+      return prev;
+    }, {});
+    return cookies;
+  }
+}
+
+function renderCookies(cookies) {
+  if (document.cookie !== '') {
+    for (const cookie in cookies) {
+      listTable.innerHTML += `<tr>
+        <td>${cookie}</td>
+        <td>${cookies[cookie]}</td>
+        <td><button class="deleteBtn">Удалить cookie</button></td>
+      </tr>`;
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderCookies(getCookies());
+});
