@@ -81,9 +81,9 @@ function getCookies() {
 
 function renderCookies(cookies) {
   listTable.innerHTML = '';
-  if (filterNameInput !== '') {
-    for (const cookie in cookies) {
-      if (cookie !== '') {
+  for (const cookie in cookies) {
+    if (cookie !== '') {
+      if (filterNameInput !== '') {
         if (
           cookie.includes(filterNameInput.value) ||
           cookies[cookie].includes(filterNameInput.value)
@@ -94,11 +94,7 @@ function renderCookies(cookies) {
           <td><button class="deleteBtn">Удалить cookie</button></td>
         </tr>`;
         }
-      }
-    }
-  } else {
-    for (const cookie in cookies) {
-      if (cookie !== '') {
+      } else {
         listTable.innerHTML += `<tr>
           <td>${cookie}</td>
           <td>${cookies[cookie]}</td>
