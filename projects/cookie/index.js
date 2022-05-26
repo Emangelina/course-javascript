@@ -85,8 +85,8 @@ function renderCookies(cookies) {
     if (cookie !== '') {
       if (filterNameInput !== '') {
         if (
-          cookie.includes(filterNameInput.value) ||
-          cookies[cookie].includes(filterNameInput.value)
+          cookie.toLowerCase().includes(filterNameInput.value.toLowerCase()) ||
+          cookies[cookie].toLowerCase().includes(filterNameInput.value.toLowerCase())
         ) {
           listTable.innerHTML += ` <tr>
           <td>${cookie}</td>
