@@ -1,10 +1,8 @@
-import { loadPartialConfig } from '@babel/core';
 import { formTemplate } from './templates';
 import './yandex.html';
 
 let reviews = [];
 let storage = localStorage;
-
 
 document.addEventListener('DOMContentLoaded', () => {
   ymaps.ready(init);
@@ -14,10 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
       center: [55.76, 37.64],
       zoom: 12,
       controls: ['zoomControl'],
-      behaviors: ['drag']
     });
 
-    setClusterer(myMap, getStorage().length?getStorage():[]);
+    setClusterer(myMap, getStorage());
 
     myMap.events.add('click', function(event) {
       const coords = event.get('coords');
@@ -26,98 +23,125 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
-async function openBalloon(map, coords, clusterer, arg) { //не могу до конца понять того, что мы передаем кластер в openBalloon. Что мы этим самым говорим? что балун открыт на кластере, а не в произвольном месте?
-  await map.balloon.open(coords, {
-    content: `<div class="balloon__reviews">
-      ${setLayout(coords, getStorage())}  
-    </div>
-    ${formTemplate}`
-  })
+async function openBalloon(map, coords, clusterer, geoObjectsInCluster, placemark) {
+  if (placemark) {
+    await map.balloon.open(coords, {
+      content: `<div class="balloon__reviews">
+        ${setLayout(coords, getStorage())}  
+      </div>
+      ${formTemplate}`
+    })
+  } else if (geoObjectsInCluster) {
+    let currentReviews = [];
+    for (let review of getStorage()) {
+      if (geoObjectsInCluster.some((geoObject) => JSON.stringify(geoObject.geometry._coordinates) === JSON.stringify(review.coords))) {
+        currentReviews.push(review);
+      }
+    }
+    await map.balloon.open(coords, {
+      content: `<div class="balloon__reviews">
+        ${setLayout(coords, getStorage(), currentReviews)}  
+      </div>
+      ${formTemplate}`
+    })
+  } else {
+    await map.balloon.open(coords, {
+      content: `${formTemplate}`
+    })
+  }
 
   const form = document.querySelector('#add-form');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (clusterer) {
-      clusterer.removeAll();
-    }
+        clusterer.removeAll()
+        map.geoObjects.remove(clusterer)
+      }
+      
+      const review = {};
+      review.coords = coords;
+      review.name = form.elements.name.value;
+      review.place = form.elements.place.value;
+      review.review = form.elements.review.value;
+      
+      reviews = getStorage();
+      reviews.push(review);
+      setStorage(reviews);
 
-    const review = {};
-    review.coords = coords;
-    review.name = form.elements.name.value;
-    review.place = form.elements.place.value;
-    review.review = form.elements.review.value;
+    setClusterer(map, reviews, coords);
 
-    reviews = getStorage().length?getStorage():[];
-    reviews.push(review);
-    
-    setStorage(reviews);
-    console.log(reviews);
-    
-    !arg?setClusterer(map, reviews, coords, review):setClusterer(map, reviews, coords);
     map.balloon.close();
   })
 }
 
-function setStorage(array) {
-  storage.data = JSON.stringify(array);
+function setStorage(reviews) {
+  storage.data = JSON.stringify(reviews);
 }
 
 function getStorage() {
-  const array = JSON.parse(storage.data || '{}');
-  return array;
+  const reviews = JSON.parse(storage.data || '[]');
+  return reviews;
 }
 
-function setClusterer(map, array, coords, object) {
-  if (array.length) {
+function setClusterer(map, reviews, coords) {
+  if (reviews.length) {
     const clusterer = new ymaps.Clusterer({hasBalloon: false, clusterDisableClickZoom: true});
-    if (object) {
-      clusterer.add(setClustererPlacemarks(findSameCoords(array, object)), formTemplate);
-    } else {
-      clusterer.add(setClustererPlacemarks(array, formTemplate));
-    }
+    clusterer.add(setClustererPlacemarks(reviews, formTemplate));
     map.geoObjects.add(clusterer);
+
 
     clusterer.events.add('click', function(event) {
       event.preventDefault();
-        // let coords1 = event.get('target').geometry._coordinates;
-        // console.log(coords1);
-      openBalloon(map, coords, clusterer, true);
+      coords = event.get('target').geometry._coordinates;
+      let placemark;
+      let geoObjectsInCluster;
+      if (event.get('target').options._name === 'cluster') {
+        geoObjectsInCluster = event.get('target').getGeoObjects();
+      } else if (event.get('target').options._name === 'geoObject') {
+        placemark = event.get('target');
+      }
+      openBalloon(map, coords, clusterer, geoObjectsInCluster, placemark);
     })
   }
 }
 
-function findSameCoords(array, object) {
-  const result = array.reduce((prev, current) => {
-    if (JSON.stringify(current.coords) === JSON.stringify(object.coords)) {
-      prev.push(current);
-    }
-    return prev;
-  }, [])
-  return result;
-}
-
-function setClustererPlacemarks(array) {
-  if (array.length) {
-    let list = array.map((item) => {
-      let placemark = new ymaps.Placemark(item.coords, {})
+function setClustererPlacemarks(reviews) {
+  if (reviews.length) {
+    let list = reviews.map((item) => {
+      let placemark = new ymaps.Placemark(item.coords);
+      placemark.events.add('click', e => e.stopPropagation);
       return placemark;
     })
     return list;
   }
 }
 
-function setLayout(coords, array) {
+function setLayout(coords, reviews, currentReviews) {
   let layout = '';
-  if (array.length) {
-    let result = array.filter(item => JSON.stringify(item.coords) === JSON.stringify(coords));
-    for (let item of result) {
-      layout += `
-      <div class = "balloon__review">
-        <div><span class="balloon__review-author">${item.name} </span><span class="balloon__review-place">${item.place}</span></div>
-        <div class="balloon__review-text">${item.review}</div>
-      </div>`
+  if (reviews.length) {
+    if (currentReviews) {
+      for (let review of currentReviews) {
+        layout += `
+          <div class = "balloon__review">
+            <div><span class="balloon__review-author">${review.name} </span><span class="balloon__review-place">${review.place}</span></div>
+            <div class="balloon__review-text">${review.review}</div>
+          </div>`
+        }
+      return layout;
+    } else {
+      let review;
+      for (let item of reviews) {
+        if (JSON.stringify(item.coords) === JSON.stringify(coords)) {
+          review = item;
+        }
+      }
+      layout = `
+        <div class = "balloon__review">
+          <div><span class="balloon__review-author">${review.name} </span><span class="balloon__review-place">${review.place}</span></div>
+          <div class="balloon__review-text">${review.review}</div>
+        </div>`
+      return layout;
     }
-    return layout;
   }
   return layout;
 }
