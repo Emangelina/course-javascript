@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    a {
+      text-decoration: none;
+    }
+    
+    input, textarea {
+    -webkit-appearance: none;
+    }
+
+    .map {
+      width: 100%;
+      height: 100vh;
+    }
+
+    .balloon__text {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      margin-top: 15px;
+    }
+
+    .balloon__form {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .balloon__input {
+      display: block;
+      border: 1px solid #CFCFCF;
+      border-radius: 3px;
+      padding: 11px;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+      outline: none;
+      font-size: 14px;
+    }
+    
+    .balloon__form textarea {
+      margin-bottom: 15px;
+    }
+
+    .balloon__input::placeholder {
+      color: #000;
+    }
+
+    .balloon__input:focus {
+      border: 1px solid #1371C8;
+    }
+
+    .balloon__reviews {
+      display: flex;
+      flex-direction: column;
+      row-gap: 20px;
+      max-height: 100px;
+      overflow-y: scroll;
+    }
+
+    .balloon__review-author {
+      font-size: 16px;
+      color: #000;
+    }
+
+    .balloon__review-place, .balloon__review-text {
+      font-size: 16px;
+      color: #8F8F8F;
+    }
+
+    textarea {
+      resize: none;
+      height: 98px;
+    }
+
+    .submit-button {
+      padding: 10px 17px;
+      background-color: #FF8663;
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background-color .3s;
+    }
+
+    .submit-button:hover {
+      background-color: #fc653a;
+    }
+
+
+
+  </style>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=ae407d11-b578-49c0-83f1-a20a6b368e03&lang=ru_RU" type="text/javascript"></script>
+</head>
+<body>
+  <div class="map" id="map"></div>
+</body>
+</html>
