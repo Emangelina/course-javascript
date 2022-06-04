@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
-async function openBalloon(map, coords, clusterer, geoObjectsInCluster, placemark) {
+async function openBalloon(map, coords, geoObjectsInCluster, placemark) {
   if (placemark) {
     await map.balloon.open(coords, {
       content: `<div class="balloon__reviews">
@@ -53,10 +53,7 @@ async function openBalloon(map, coords, clusterer, geoObjectsInCluster, placemar
   const form = document.querySelector('#add-form');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (clusterer) {
-        clusterer.removeAll()
-        map.geoObjects.remove(clusterer)
-      }
+      map.geoObjects.removeAll();
       
       const review = {};
       review.coords = coords;
@@ -86,9 +83,8 @@ function getStorage() {
 function setClusterer(map, reviews, coords) {
   if (reviews.length) {
     const clusterer = new ymaps.Clusterer({hasBalloon: false, clusterDisableClickZoom: true});
-    clusterer.add(setClustererPlacemarks(reviews, formTemplate));
+    clusterer.add(setClustererPlacemarks(reviews));
     map.geoObjects.add(clusterer);
-
 
     clusterer.events.add('click', function(event) {
       event.preventDefault();
@@ -100,7 +96,7 @@ function setClusterer(map, reviews, coords) {
       } else if (event.get('target').options._name === 'geoObject') {
         placemark = event.get('target');
       }
-      openBalloon(map, coords, clusterer, geoObjectsInCluster, placemark);
+      openBalloon(map, coords, geoObjectsInCluster, placemark);
     })
   }
 }
@@ -109,7 +105,6 @@ function setClustererPlacemarks(reviews) {
   if (reviews.length) {
     let list = reviews.map((item) => {
       let placemark = new ymaps.Placemark(item.coords);
-      placemark.events.add('click', e => e.stopPropagation);
       return placemark;
     })
     return list;
